@@ -11,9 +11,13 @@ int current_turn;
 float last_time;
 float time_since_turn;
 
+BoardStorage boards;
+
 boolean auto = false;
 
 void setup() {
+  boards = new BoardStorage();
+  
   current_board = new Board();
   bot = new AI();
   
@@ -37,7 +41,7 @@ void draw() {
   if(current_turn == RED_PLAYER || auto) {
     
     if (auto) delta_time *= 100;
-    time_since_turn += delta_time;
+    //time_since_turn += delta_time;
     
     if(time_since_turn > 1*1000) {
       inputTurn(best_move / 3, best_move % 3);
@@ -100,8 +104,8 @@ void drawBoard(Board b) {
 }
 
 void inputTurn(int r, int c) {
-  if(current_board.getChild(r,c) != null) {
-    current_board = current_board.getChild(r, c);
+  if(current_board.getChild(r, c,  current_turn == first_turn) != null) {
+    current_board = current_board.getChild(r, c, current_turn == first_turn);
     current_turn = (current_turn == RED_PLAYER) ? BLUE_PLAYER : RED_PLAYER;
  
     if(current_board.isDone()) {
@@ -113,22 +117,76 @@ void inputTurn(int r, int c) {
   best_move = bot.getMove();
 }
 
+ArrayList<Integer> indexOfMultiple(String s, char c) {
+  ArrayList<Integer> indices = new ArrayList<Integer>();
+  String temp_string = new String(s);
+    
+  int offset = 0;
+  int i = 0;
+  while(temp_string.indexOf(c) != -1) {
+    i = temp_string.indexOf(c);
+    indices.add(i + offset);
+    // now we want to get the substring after the index, store 
+    // how much offset we've creating by shrinking the string
+    offset += i + 1;
+    temp_string = temp_string.substring(i + 1);
+  }
+  
+  return indices;
+}
+
+void saveGame() {
+  // pass in the current board, whether the last player was p1, and the end state
+  saveGame_rec(current_board, !(current_turn == first_turn), current_board.state);
+}
+
+// recursive function for saving end state to all parent boards
+void saveGame_rec(Board b, boolean player_one, int end_state) {
+  // get string for b
+  String board_string = b.toString();
+  char board_piece = player_one? '1' : '2';
+  
+  // base case:
+  // if board is not start state (EEEEEEEEE),
+  if(!board_string.equals("EEEEEEEEE")) {
+    // find all indices of cur player (1 or 2) in string
+    ArrayList<Integer> indices = indexOfMultiple(board_string, board_piece);
+    
+    // call this on each index one by one, replacing with E
+    String new_string;
+    for(Integer i : indices) {
+      // build the string:
+      new_string = "";
+      
+      // if there's anything before the index, add it
+      if(i > 0) new_string += board_string.substring(0, i);
+      
+      // add the E that replaces the index
+      new_string += 'E';
+      
+      // now add the remaining board
+      if(i+1 < board_string.length()) new_string += board_string.substring(i+1);
+      
+      // now recurse on these boards
+      saveGame_rec(boards.get(new_string), !player_one, end_state);
+    }
+  }
+  
+  // increment b stats based on end_state
+  b.child_games++;
+  if(end_state == BOARD_EVEN_WIN) { 
+    b.even_victories++;
+  } else if(end_state == BOARD_ODD_WIN) {
+    b.odd_victories++;
+  }
+}
+
 void resetGame() {
   int end_state = current_board.state;
   
-  while(current_board.parent != null) {
-    switch(end_state) {
-      case BOARD_EVEN_WIN:
-        current_board.even_victories++;
-        break;
-      case BOARD_ODD_WIN:
-        current_board.odd_victories++;
-        break;
-    }
-    
-    current_board.child_games++;
-    current_board = current_board.parent;
-  }
+  saveGame();
+  
+  current_board = boards.getRoot();
   
   first_turn = (random(1.0) > 0.5) ? BLUE_PLAYER : RED_PLAYER;
   current_turn = first_turn;
@@ -144,14 +202,14 @@ void mousePressed() {
   int c = mouseX/(width/3);
   int r = mouseY/(height/3);
   
-  inputTurn(r,c);
+  inputTurn(r, c);
 }
 
 void keyPressed() {
   if(key == 'n') {
     inputTurn(best_move / 3, best_move % 3);
   } else if (key == 'c') {
-    float[][] chances = current_board.getWinChances();
+    float[][] chances = current_board.getWinChances(current_turn == first_turn);
     current_board.printout();
     
     println("Win Chances");
@@ -162,7 +220,7 @@ void keyPressed() {
       }
     }
     
-    float[][] loss_chance = current_board.getLossChances();
+    float[][] loss_chance = current_board.getLossChances(current_turn == first_turn);
     
     println();
     println("Loss Chances");

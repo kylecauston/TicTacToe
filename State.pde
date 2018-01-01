@@ -10,8 +10,8 @@ class Learning extends State {
 
 class Winning extends State {
   int getMove() {
-    float[][] win_chances = current_board.getWinChances();
-    float[][] loss_chances = current_board.getLossChances();
+    float[][] win_chances = current_board.getWinChances(current_turn == first_turn);
+    float[][] loss_chances = current_board.getLossChances(current_turn == first_turn);
     
     ArrayList<int[]> win_indices = new ArrayList<int[]>();
     ArrayList<int[]> loss_indices = new ArrayList<int[]>();
