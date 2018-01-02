@@ -1,4 +1,4 @@
-import java.util.HashMap; //<>//
+import java.util.HashMap; //<>// //<>//
 
 final int BOARD_PLAYING = 0;
 final int BOARD_ODD_WIN = 1;
@@ -15,14 +15,13 @@ class Board {
 
   int num_moves = 0;
 
-  // keep track of the victories of children
-  int child_games = 0;
-  int odd_victories = 0;
-  int even_victories = 0;
+  Statistic stats;
 
   Board() {
+    stats = new Statistic();
     tiling = new char[3][3];
-
+    num_moves = 0;
+    
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
         tiling[r][c] = 'E';
@@ -33,6 +32,7 @@ class Board {
   }
 
   Board(String s) {
+    stats = new Statistic();
     tiling = new char[3][3];
     num_moves = 0;
 
@@ -167,19 +167,11 @@ class Board {
 
   // returns the chance of the given player winning
   float getWinChance(boolean player_one) {
-    if (child_games > 0) {
-      return player_one ? ((float) odd_victories) / child_games : ((float) even_victories) / child_games;
-    } else {
-      return 2.0f;
-    }
+   return player_one ? stats.getOddChances() : stats.getEvenChances();
   }
 
   float getLossChance(boolean player_one) {
-    if (child_games > 0) {
-      return player_one ? ((float) even_victories) / child_games : ((float) odd_victories) / child_games;
-    } else {
-      return 0.0f;
-    }
+     return player_one ? stats.getEvenChances() : stats.getOddChances();
   }
 
   // returns an array of win chances for spot choices
@@ -251,6 +243,14 @@ class Board {
     Board child = boards.get(s);
 
     return child;
+  }
+  
+  void addVictory(boolean even) {
+    stats.addResult(even);
+  }
+  
+  void addTie() {
+    stats.addTie();
   }
 
   void printout() {

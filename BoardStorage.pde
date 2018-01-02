@@ -28,4 +28,8 @@ class BoardStorage {
     
     return b;
   }
+  
+  @Override
+  String toString() {
+  }
 }
