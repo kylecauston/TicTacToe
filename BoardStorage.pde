@@ -31,5 +31,6 @@ class BoardStorage {
   
   @Override
   String toString() {
+    return "";
   }
 }
