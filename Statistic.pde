@@ -9,10 +9,10 @@ class Statistic {
   }
   
   Statistic(String s) {
-    String[] split = s.split("|");
-    num_games = parseInt(split[0]);
-    odd_wins = parseInt(split[1]);
-    even_wins = parseInt(split[2]);  
+    String[] parts = split(s, "|");
+    num_games = parseInt(parts[0]);
+    odd_wins = parseInt(parts[1]);
+    even_wins = parseInt(parts[2]);
   }
   
   float getConfidence() {

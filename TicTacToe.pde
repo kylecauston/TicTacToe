@@ -25,7 +25,10 @@ boolean auto = false;
 void setup() {
   boards = new BoardStorage();
 
-  current_board = new Board();
+  if(!loadRecordedData()) {
+    current_board = new Board();
+  }
+  
   bot = new AI();
 
   visited_boards = new HashSet();
@@ -86,7 +89,7 @@ void drawBoard(Board b) {
   rect(col*(width/3)+1, row*(height/3)+1, (width/3)-1, (height/3)-1);
   strokeWeight(1);
 
-  float[][] chances = current_board.getWinChances(current_turn == first_turn);
+  float[][] chances = current_board.getLossChances(current_turn == first_turn);
 
   int tile;
   for (int r=0; r<3; r++) {
@@ -215,10 +218,37 @@ void resetGame() {
   best_move = bot.getMove();
 }
 
+void recordLearnedData() {
+  // take what the bot has learned about the boards and save to memory
+  saveStrings("data/memory.txt", boards.outputString());
+}
+
+boolean loadRecordedData() {
+  File memory = dataFile("memory.txt");
+  
+  if(memory.exists()) {
+    String[] lines = loadStrings("data/memory.txt"); 
+    
+    String[] parts;
+    for(int i=0; i<lines.length; i++) {
+      parts = split(lines[i], ":");
+      
+      boards.get(parts[0]).setStatistic(new Statistic(parts[1]));
+    }
+  
+    
+    current_board = boards.get("EEEEEEEEE");
+    return true;
+  } 
+  
+  return false;
+}
+
 void mousePressed() { 
   if (mouseButton == RIGHT) {
     // current_board = current_board.parent;
-    // return;
+    recordLearnedData();
+    return;
   }
 
   int c = mouseX/(width/3);
@@ -257,4 +287,8 @@ void keyPressed() {
   } else {
     auto = !auto;
   }
+}
+
+void exit() {
+  recordLearnedData();
 }

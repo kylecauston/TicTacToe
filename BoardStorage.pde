@@ -1,6 +1,8 @@
+import java.util.Set;
+
 
 class BoardStorage {
-  HashMap<String, Board> board_map; ;
+  HashMap<String, Board> board_map;
   Board root;
   
   BoardStorage() {
@@ -29,8 +31,13 @@ class BoardStorage {
     return b;
   }
   
-  @Override
-  String toString() {
-    return "";
+  String[] outputString() {
+    String[] board_names = board_map.keySet().toArray(new String[1]);
+    String[] output = new String[board_names.length];
+    for(int i=0; i<board_names.length; i++) {
+      output[i] = board_map.get(board_names[i]).toFileString();
+    }
+  
+    return output;
   }
 }
