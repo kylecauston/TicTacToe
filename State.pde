@@ -10,33 +10,17 @@ class Learning extends State {
 
 class Winning extends State {
   int getMove() {
-    float[][] win_chances = current_board.getWinChances(current_turn == first_turn);
-    float[][] loss_chances = current_board.getLossChances(current_turn == first_turn);
-    
-    ArrayList<int[]> win_indices = new ArrayList<int[]>();
+    float[][] win_chances = current_board.getChildWinChances(current_turn == first_turn);
+    float[][] loss_chances = current_board.getChildLossChances(current_turn == first_turn);
+
     ArrayList<int[]> loss_indices = new ArrayList<int[]>();
 
     int[] points = new int[2]; 
-    float highest_chance = -999; // find the highest chance of winning
     float lowest_chance = 999; // find the lowest chance of losing
-    
-    for(int r=0; r<3; r++) {
-      for(int c=0; c<3; c++) {
-        if(win_chances[r][c] > highest_chance) {
-          highest_chance = win_chances[r][c];
-          points = new int[2];
-          points[0] = r;
-          points[1] = c;
-          win_indices.clear();
-          win_indices.add(points);
-        } else if (win_chances[r][c] == highest_chance) {
-          points = new int[2];
-          points[0] = r;
-          points[1] = c;
-          win_indices.add(points);
-        }
-        
-        if(loss_chances[r][c] < lowest_chance && loss_chances[r][c] >= 0) {
+
+    for (int r=0; r<3; r++) {
+      for (int c=0; c<3; c++) { 
+        if (loss_chances[r][c] < lowest_chance && loss_chances[r][c] != -1.0) {
           lowest_chance = loss_chances[r][c];
           points = new int[2];
           points[0] = r;
@@ -51,14 +35,43 @@ class Winning extends State {
         }
       }
     }
-    
-   // int[] index = win_indices.get(int(random(win_indices.size())));
-    //println("high: " + highest_chance + " Low: " + lowest_chance);
-   // if(highest_chance < 0.1) {
-    //  println("Trying to prevent loss");
-     int[] index = loss_indices.get(int(random(loss_indices.size())));
-    //}
-    
+
+    int[] index = null;
+
+    //if there's a tie for lowest loss chance, look for highest win chance among the ties  
+    if (loss_indices.size() > 1) {
+      println("tied for losses");
+
+      float highest_chance = -999; // find the highest chance of winning
+      ArrayList<int[]> win_indices = new ArrayList<int[]>();
+
+      for(int i=0; i<loss_indices.size(); i++) {
+        points = loss_indices.get(i);
+        if(win_chances[points[0]][points[1]] > highest_chance) {
+          win_indices.clear();
+          win_indices.add(points);
+          highest_chance = win_chances[points[0]][points[1]];
+        } else if (win_chances[points[0]][points[1]] == highest_chance) {
+          win_indices.add(points);
+        }
+      }
+
+      index = win_indices.get(int(random(win_indices.size())));
+    } else {
+
+      float[][] loss_chance = current_board.getChildLossChances(current_turn == first_turn);
+
+      println();
+      println("Loss Chances");
+      for (int r=0; r<3; r++) {
+        println();
+        for (int c=0; c<3; c++) {
+          print(" " + loss_chance[r][c] + " ");
+        }
+      }
+      index = loss_indices.get(int(random(loss_indices.size())));
+    }
+
     println();
     println(index[0] + " " + index[1]);
     return index[0]*3 + index[1];

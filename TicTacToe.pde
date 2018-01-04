@@ -50,10 +50,9 @@ void draw() {
   float delta_time = millis() - last_time;
   last_time = millis();
 
-  if (current_turn == RED_PLAYER || auto) {
+  if (current_turn == RED_PLAYER) {
 
-    if (auto) delta_time *= 100;
-    //time_since_turn += delta_time;
+    if(auto) time_since_turn += delta_time;
 
     if (time_since_turn > 1*1000) {
       inputTurn(best_move / 3, best_move % 3);
@@ -89,8 +88,9 @@ void drawBoard(Board b) {
   rect(col*(width/3)+1, row*(height/3)+1, (width/3)-1, (height/3)-1);
   strokeWeight(1);
 
-  float[][] chances = current_board.getLossChances(current_turn == first_turn);
-
+  float[][] loss_chances = current_board.getChildLossChances(current_turn == first_turn);
+  float[][] win_chances = current_board.getChildWinChances(current_turn == first_turn);
+  
   int tile;
   for (int r=0; r<3; r++) {
     for (int c=0; c<3; c++) {
@@ -113,8 +113,11 @@ void drawBoard(Board b) {
         ellipse((c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6, 15, 15);
       } else { 
         textAlign(CENTER, CENTER);
-        fill(#000000);
-        text((int)(chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6);
+        fill(#5FFF21);
+        text((int)(win_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 - 10);
+        fill(#FF4D4D);
+        text((int)(loss_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 + 10);
+        
       }
     }
   }
@@ -207,8 +210,6 @@ void saveGame_rec(Board b, boolean player_one, int end_state) {
 }
 
 void resetGame() {
-  int end_state = current_board.state;
-
   saveGame();
 
   current_board = boards.getRoot();
@@ -237,7 +238,7 @@ boolean loadRecordedData() {
     }
   
     
-    current_board = boards.get("EEEEEEEEE");
+    current_board = boards.getRoot();
     return true;
   } 
   
@@ -261,7 +262,7 @@ void keyPressed() {
   if (key == 'n') {
     inputTurn(best_move / 3, best_move % 3);
   } else if (key == 'c') {
-    float[][] chances = current_board.getWinChances(current_turn == first_turn);
+    float[][] chances = current_board.getChildWinChances(current_turn == first_turn);
     current_board.printout();
 
     println("Win Chances");
@@ -272,7 +273,7 @@ void keyPressed() {
       }
     }
 
-    float[][] loss_chance = current_board.getLossChances(current_turn == first_turn);
+    float[][] loss_chance = current_board.getChildLossChances(current_turn == first_turn);
 
     println();
     println("Loss Chances");
@@ -286,6 +287,7 @@ void keyPressed() {
     println(current_board.stats.getOddWins());
   } else {
     auto = !auto;
+    println("auto: " + auto);
   }
 }
 

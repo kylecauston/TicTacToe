@@ -23,7 +23,7 @@ class AI {
 
   // returns the 1D index of the best move
   int getBestMove() {
-    float[][] chances = current_board.getWinChances(current_turn == first_turn);
+    float[][] chances = current_board.getChildWinChances(current_turn == first_turn);
     
     ArrayList<int[]> indices = new ArrayList<int[]>();
 

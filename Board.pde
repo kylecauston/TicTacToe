@@ -152,6 +152,10 @@ class Board {
     stats = s;
   }
   
+  Statistic getStatistic() {
+    return stats;
+  }
+  
   String toFileString() {
     return toString() + ":" + stats.toString();
   }
@@ -188,7 +192,7 @@ class Board {
   // 1.0 if this move would win the game
   // [0.0, 1.0) if the move isn't instant win
   // -1.0 if this tile is already filled
-  float[][] getWinChances(boolean player_one) {
+  float[][] getChildWinChances(boolean player_one) {
     float [][] arr = new float[3][3];
 
     Board child;
@@ -212,7 +216,7 @@ class Board {
   // 1.0 if this move would lose the game
   // [0.0, 1.0) if the move isn't instant loss
   // -1.0 if this tile is already filled
-  float[][] getLossChances(boolean player_one) {
+  float[][] getChildLossChances(boolean player_one) {
     float [][] arr = new float[3][3];
 
     Board child;
@@ -223,12 +227,20 @@ class Board {
           arr[r][c] = -1.0;
         } else {
           arr[r][c] = child.getLossChance(player_one);
+          // the "unknown" value
+          if(arr[r][c] == 2.0) {
+            arr[r][c] = -2.0;
+          }
         }
       }
     }
 
     return arr;
   }
+  
+//  Statistic[] getStatistics() {
+    
+//  }
 
   Board getChild(int row, int col, boolean player_one) {
     if (this.tiling[row][col] != 'E') {
