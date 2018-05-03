@@ -8,6 +8,45 @@ class Learning extends State {
   }
 }
 
+class HeuristicMove extends State 
+{
+  int getMove() 
+  {
+    int[] selected = new int[2];
+    
+    float[][] heuristics = current_board.getChildHeuristic(current_turn == first_turn);
+    
+    int[] points = new int[2];
+    float highest = -999; // we find the highest heuristic value
+    
+    ArrayList<int[]> tied_indices = new ArrayList<int[]>();
+    
+    for(int r=0; r<3; r++)
+    {
+      for(int c=0; c<3; c++)
+      {
+        if (heuristics[r][c] > highest && heuristics[r][c] != -1.0)
+        {
+          highest = heuristics[r][c];
+          
+          tied_indices.clear();
+          tied_indices.add(new int[] {r, c});
+        }
+        else if (heuristics[r][c] == highest) 
+        {
+          tied_indices.add(new int[] {r, c});
+        }
+      }
+    }
+    
+    selected = tied_indices.get((int) random(tied_indices.size()-1));
+    
+   // println();
+  //  println(selected[0] + " " + selected[1]);
+    return selected[0]*3 + selected[1];
+  }
+}
+
 class Winning extends State {
   int getMove() {
     float[][] win_chances = current_board.getChildWinChances(current_turn == first_turn);

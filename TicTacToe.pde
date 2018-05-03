@@ -15,12 +15,12 @@ float time_since_turn;
 
 BoardStorage boards;
 
-// not sure where else to put this used for
+// not sure where else to put this. used for
 // recording results, so we don't assign a
 // win to a board multiple times
 HashSet<String> visited_boards;
 
-boolean auto = false;
+boolean auto = true;
 
 void setup() {
   boards = new BoardStorage();
@@ -47,6 +47,7 @@ void draw() {
   background(#FFFFFF);
   drawBoard(current_board);
 
+  //stop();
   float delta_time = millis() - last_time;
   last_time = millis();
 
@@ -90,6 +91,7 @@ void drawBoard(Board b) {
 
   float[][] loss_chances = current_board.getChildLossChances(current_turn == first_turn);
   float[][] win_chances = current_board.getChildWinChances(current_turn == first_turn);
+  float[][] heuristic = current_board.getChildHeuristic(current_turn == first_turn);
   
   int tile;
   for (int r=0; r<3; r++) {
@@ -113,10 +115,12 @@ void drawBoard(Board b) {
         ellipse((c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6, 15, 15);
       } else { 
         textAlign(CENTER, CENTER);
-        fill(#5FFF21);
-        text((int)(win_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 - 10);
-        fill(#FF4D4D);
-        text((int)(loss_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 + 10);
+        fill(#000000);
+        text((heuristic[r][c]), (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 - 10);
+        //fill(#5FFF21);
+        //text((int)(win_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 - 10);
+        //fill(#FF4D4D);
+        //text((int)(loss_chances[r][c]*100)+"%", (c+1) * (width/3) - width/6, (r+1)*(height/3) - height/6 + 10);
         
       }
     }
@@ -200,11 +204,16 @@ void saveGame_rec(Board b, boolean player_one, int end_state) {
     visited_boards.add(board_string);
     // increment b stats based on end_state
     if (end_state == BOARD_EVEN_WIN) { 
+      //println("adding even win to " + board_string);
       b.addVictory(true);
     } else if (end_state == BOARD_ODD_WIN) {
+      //println("adding odd win to " + board_string);
       b.addVictory(false);
     } else if (end_state == BOARD_TIE) {
+      // println("adding tie to " + board_string);
       b.addTie();
+    } else {
+      // println("adding nothing to " + board_string); 
     }
   }
 }

@@ -181,6 +181,32 @@ class Board {
   float getWinChance(boolean player_one) {
    return player_one ? stats.getOddChances() : stats.getEvenChances();
   }
+  
+  // heuristic uses linear interpolation between winrate and games played, based on confidence
+  // it takes both the average of the nonlosing chance, and the win chance 
+  float getHeuristic(boolean player_one)
+  {
+    float wr_weight = ((float)stats.getNumGames()) / 50f;
+    wr_weight = constrain(wr_weight, 0.0, 1.0);
+    
+    if(stats.getNumGames() == 0)
+    {
+      return 0.999;
+    }
+    
+   // println(stats.getNumGames());
+    // now the mathematical value for the nonloss heuristic is defined as 
+    // (1 - loss chance) * wr_weight + 1.0 * (1 - wr_weight)
+    float nonLossHeuristic = (1.0f - getLossChance(player_one)) * wr_weight + (1.0f - wr_weight);
+   
+    // the math value for the win heuristic is defined as 
+    // winChance * wr_weight + 1.0 * (1 - wr_weight)
+    float winHeuristic = (float) getWinChance(player_one) * wr_weight + (1.0f - wr_weight);
+    
+    float heuristic = (nonLossHeuristic + winHeuristic) / 2.0f;
+    //println(nonLossHeuristic+ ", " + winHeuristic+ ", " + heuristic);
+    return heuristic;
+  }
 
   float getLossChance(boolean player_one) {
      return player_one ? stats.getEvenChances() : stats.getOddChances();
@@ -231,6 +257,24 @@ class Board {
           if(arr[r][c] == 2.0) {
             arr[r][c] = -2.0;
           }
+        }
+      }
+    }
+
+    return arr;
+  }
+  
+  float[][] getChildHeuristic(boolean player_one) {
+    float [][] arr = new float[3][3];
+
+    Board child;
+    for (int r=0; r<3; r++) {
+      for (int c=0; c<3; c++) {
+        child = this.getChild(r, c, player_one);
+        if (child == null) {
+          arr[r][c] = -1.0;
+        } else {
+          arr[r][c] = child.getHeuristic(player_one);
         }
       }
     }
