@@ -28,19 +28,19 @@ class Statistic {
   }
   
   float getOddChances() {
-    if(num_games <= 0) return 2.0;
+    if(num_games <= 0) return NO_DATA;
     
     return ((float) odd_wins) / num_games;
   }
   
   float getEvenChances() {
-    if(num_games <= 0) return 2.0;
+    if(num_games <= 0) return NO_DATA;
     
     return ((float) even_wins) / num_games;
   }
  
   float getTieChances() {
-    if(num_games <= 0) return 2.0;
+    if(num_games <= 0) return NO_DATA;
     
     int ties = (num_games - odd_wins - even_wins);
     return ((float) ties) / num_games;
@@ -58,6 +58,8 @@ class Statistic {
       odd_wins++;
     }
     num_games++;
+    
+    println("games: " + num_games + ", even: " + even_wins + ", odd: " + odd_wins);
   }
   
   void addTie() {

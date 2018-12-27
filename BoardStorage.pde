@@ -14,7 +14,7 @@ class BoardStorage {
   
   void put(String k, Board v) {
     board_map.put(k, v);
-    if(v.toString().equals("EEEEEEEEE")) {
+    if(v.toString().equals("000000000")) {
       root = v;
     }
   }

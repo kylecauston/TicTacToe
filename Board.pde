@@ -8,6 +8,9 @@ final int BOARD_TIE = 3;
 final char BLUE_TOKEN = 'B';
 final char RED_TOKEN = 'R';
 
+final float NO_DATA = 2.0;
+final float SPOT_TAKEN = -1.0;
+
 class Board {  
   char[][] tiling;
 
@@ -24,11 +27,11 @@ class Board {
     
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
-        tiling[r][c] = 'E';
+        tiling[r][c] = '0';
       }
     }
     
-    boards.put("EEEEEEEEE", this);
+    boards.put("000000000", this);
   }
 
   Board(String s) {
@@ -40,7 +43,17 @@ class Board {
       for (int c=0; c<3; c++) {
         tiling[r][c] = s.charAt(r*3 + c);
 
-        if (tiling[r][c] != 'E') num_moves++;
+        if (tiling[r][c] != '0') num_moves++;
+      }
+    }
+
+    // make a tiling array of numerical values
+    int[][] tile_vals = new int[3][3];
+    for(int r=0; r<3; r++)
+    {
+      for(int c=0; c<3; c++)
+      {
+        tile_vals[r][c] = Character.getNumericValue(tiling[r][c]);
       }
     }
 
@@ -54,43 +67,45 @@ class Board {
 
     // t represents which player we're looking for (p1 or 2)
     for (int t=1; t<3; t++) {              
-      char tile = (t == 1) ? '1' : '2';
+      int remainder = t % 2; // start with odd player, then go to even
 
       for (int r=0; r<3; r++) {
         row_victory = row_victory
-          || tiling[r][0] == tile
-          && tiling[r][1] == tile
-          && tiling[r][2] == tile;
+          || tile_vals[r][0] != 0 && tile_vals[r][0] % 2 == remainder
+          && tile_vals[r][1] != 0 && tile_vals[r][1] % 2 == remainder
+          && tile_vals[r][2] != 0 && tile_vals[r][2] % 2 == remainder;
       }
 
       for (int c=0; c<3; c++) {
         col_victory = col_victory
-          || tiling[0][c] == tile
-          && tiling[1][c] == tile
-          && tiling[2][c] == tile;
+          || tile_vals[0][c] != 0 && tile_vals[0][c] % 2 == remainder
+          && tile_vals[1][c] != 0 && tile_vals[1][c] % 2 == remainder
+          && tile_vals[2][c] != 0 && tile_vals[2][c] % 2 == remainder;
       }
 
-      down_right_victory = tiling[0][0] == tile
-        && tiling[1][1] == tile
-        && tiling[2][2] == tile;
+      down_right_victory = tile_vals[0][0] != 0 && tile_vals[0][0] % 2 == remainder
+        && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
+        && tile_vals[2][2] != 0 && tile_vals[2][2] % 2 == remainder;
 
-      down_left_victory = tiling[0][2] == tile
-        && tiling[1][1] == tile
-        && tiling[2][0] == tile;
+      down_left_victory = tile_vals[0][2] != 0 && tile_vals[0][2] % 2 == remainder
+        && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
+        && tile_vals[2][0] != 0 && tile_vals[2][0] % 2 == remainder;
         
       if (row_victory || col_victory || down_right_victory || down_left_victory) {
-        state = (tile == '1') ? BOARD_ODD_WIN : BOARD_EVEN_WIN;
+        state = (remainder == 1) ? BOARD_ODD_WIN : BOARD_EVEN_WIN;
         break;
       } else if (num_moves == 9) {
         state = BOARD_TIE;
         break;
       }
     }
+    println("Board state: " + row_victory + ", " + col_victory + ", " + down_right_victory + ", " + down_left_victory);
+    this.printout();
     
     boards.put(s, this);
   }
 
-  Board(char[][] prev_board, int r, int c, boolean player_one) {
+  Board(char[][] prev_board, int r, int c) {
     this();
 
     String s = "";
@@ -100,50 +115,60 @@ class Board {
       for (int C=0; C<3; C++) {
         if (R == r && C == c) 
         {
-          tiling[r][c] = player_one ? '1' : '2';
+          tiling[r][c] = (char) (num_moves + 1 + '0');
         } else { 
           tiling[R][C] = prev_board[R][C];
         }
 
-        if (tiling[R][C] != 'E') num_moves++;
+        if (tiling[R][C] != '0') num_moves++;
         s += tiling[R][C];
       }
     }
 
     // set state by checking things that the new tile could have affected
-
+    
+    int[][] tile_vals = new int[3][3];
+    for(int R=0; R<3; R++)
+    {
+      for(int C=0; C<3; C++)
+      {
+        tile_vals[R][C] = Character.getNumericValue(tiling[R][C]);
+      }
+    }
     // check what type of victory we look for (player 1 or 2)
-    char tile = player_one ? '1' : '2';
+    int remainder = num_moves % 2;
 
     // first check if the row was a victory
-    boolean row_victory = tiling[r][0] != 'E' && tiling[r][0] == tile
-      && tiling[r][1] != 'E' && tiling[r][1] == tile
-      && tiling[r][2] != 'E' && tiling[r][2] == tile;
+    boolean row_victory = tile_vals[r][0] != 0 && tile_vals[r][0] % 2 == remainder
+      && tile_vals[r][1] != 0 && tile_vals[r][1] % 2 == remainder
+      && tile_vals[r][2] != 0 && tile_vals[r][2] % 2 == remainder;
 
     // check if column was victory
-    boolean col_victory = tiling[0][c] != 'E' && tiling[0][c] == tile
-      && tiling[1][c] != 'E' && tiling[1][c] == tile
-      && tiling[2][c] != 'E' && tiling[2][c] == tile;
+    boolean col_victory = tile_vals[0][c] != 0 && tile_vals[0][c] % 2 == remainder
+      && tile_vals[1][c] != 0 && tile_vals[1][c] % 2 == remainder
+      && tile_vals[2][c] != 0 && tile_vals[2][c] % 2 == remainder;
 
     // now check if either diagonal is applicable 
     boolean down_right_victory = r == c 
-      && tiling[0][0] != 'E' && tiling[0][0] == tile
-      && tiling[1][1] != 'E' && tiling[1][1] == tile
-      && tiling[2][2] != 'E' && tiling[2][2] == tile;
+      && tile_vals[0][0] != 0 && tile_vals[0][0] % 2 == remainder
+      && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
+      && tile_vals[2][2] != 0 && tile_vals[2][2] % 2 == remainder;
 
     boolean down_left_victory = r+c == 2 
-      && tiling[0][2] != 'E' && tiling[0][2] == tile
-      && tiling[1][1] != 'E' && tiling[1][1] == tile
-      && tiling[2][0] != 'E' && tiling[2][0] == tile;
+      && tile_vals[0][2] != 0 && tile_vals[0][2] % 2 == remainder
+      && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
+      && tile_vals[2][0] != 0 && tile_vals[2][0] % 2 == remainder;
 
 
     // if this is a victory state, pick the correct state
     // if it's not victory state, check if it's a tie
     if (row_victory || col_victory || down_right_victory || down_left_victory) {
-      state = (tile == '1') ? BOARD_ODD_WIN : BOARD_EVEN_WIN;
+      state = (remainder == 1) ? BOARD_ODD_WIN : BOARD_EVEN_WIN;
     } else if (num_moves == 9) {
       state = BOARD_TIE;
     }
+
+    println("Board state: " + row_victory + ", " + col_victory + ", " + down_right_victory + ", " + down_left_victory);
 
     boards.put(s, this);
   }
@@ -177,14 +202,18 @@ class Board {
     return !(state == BOARD_PLAYING);
   }
 
-  // returns the chance of the given player winning
-  float getWinChance(boolean player_one) {
-   return player_one ? stats.getOddChances() : stats.getEvenChances();
+  // returns the chance of the given player winning if given this board state
+  float getWinChance(boolean odd) {
+   return odd ? stats.getOddChances() : stats.getEvenChances();
+  }
+  
+  float getLossChance(boolean odd) {
+     return odd ? stats.getEvenChances() : stats.getOddChances();
   }
   
   // heuristic uses linear interpolation between winrate and games played, based on confidence
   // it takes both the average of the nonlosing chance, and the win chance 
-  float getHeuristic(boolean player_one)
+  float getHeuristic(boolean odd)
   {
     float wr_weight = ((float)stats.getNumGames()) / 50f;
     wr_weight = constrain(wr_weight, 0.0, 1.0);
@@ -197,19 +226,15 @@ class Board {
    // println(stats.getNumGames());
     // now the mathematical value for the nonloss heuristic is defined as 
     // (1 - loss chance) * wr_weight + 1.0 * (1 - wr_weight)
-    float nonLossHeuristic = (1.0f - getLossChance(player_one)) * wr_weight + (1.0f - wr_weight);
+    float nonLossHeuristic = (1.0f - getLossChance(odd)) * wr_weight + (1.0f - wr_weight);
    
     // the math value for the win heuristic is defined as 
     // winChance * wr_weight + 1.0 * (1 - wr_weight)
-    float winHeuristic = (float) getWinChance(player_one) * wr_weight + (1.0f - wr_weight);
+    float winHeuristic = (float) getWinChance(odd) * wr_weight + (1.0f - wr_weight);
     
     float heuristic = (nonLossHeuristic + winHeuristic) / 2.0f;
     //println(nonLossHeuristic+ ", " + winHeuristic+ ", " + heuristic);
     return heuristic;
-  }
-
-  float getLossChance(boolean player_one) {
-     return player_one ? stats.getEvenChances() : stats.getOddChances();
   }
 
   // returns an array of win chances for spot choices
@@ -218,17 +243,17 @@ class Board {
   // 1.0 if this move would win the game
   // [0.0, 1.0) if the move isn't instant win
   // -1.0 if this tile is already filled
-  float[][] getChildWinChances(boolean player_one) {
+  float[][] getChildWinChances(boolean odd) {
     float [][] arr = new float[3][3];
 
     Board child;
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
-        child = this.getChild(r, c, player_one);
+        child = this.getChild(r, c);
         if (child == null) {
-          arr[r][c] = -1.0;
+          arr[r][c] = SPOT_TAKEN;
         } else {
-          arr[r][c] = child.getWinChance(player_one);
+          arr[r][c] = child.getWinChance(odd);
         }
       }
     }
@@ -242,19 +267,19 @@ class Board {
   // 1.0 if this move would lose the game
   // [0.0, 1.0) if the move isn't instant loss
   // -1.0 if this tile is already filled
-  float[][] getChildLossChances(boolean player_one) {
+  float[][] getChildLossChances(boolean odd) {
     float [][] arr = new float[3][3];
 
     Board child;
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
-        child = this.getChild(r, c, player_one);
+        child = this.getChild(r, c);
         if (child == null) {
-          arr[r][c] = -1.0;
+          arr[r][c] = SPOT_TAKEN;
         } else {
-          arr[r][c] = child.getLossChance(player_one);
+          arr[r][c] = child.getLossChance(odd);
           // the "unknown" value
-          if(arr[r][c] == 2.0) {
+          if(arr[r][c] == NO_DATA) {
             arr[r][c] = -2.0;
           }
         }
@@ -264,17 +289,17 @@ class Board {
     return arr;
   }
   
-  float[][] getChildHeuristic(boolean player_one) {
+  float[][] getChildHeuristic(boolean odd) {
     float [][] arr = new float[3][3];
 
     Board child;
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
-        child = this.getChild(r, c, player_one);
+        child = this.getChild(r, c);
         if (child == null) {
-          arr[r][c] = -1.0;
+          arr[r][c] = SPOT_TAKEN;
         } else {
-          arr[r][c] = child.getHeuristic(player_one);
+          arr[r][c] = child.getHeuristic(odd);
         }
       }
     }
@@ -286,8 +311,8 @@ class Board {
     
 //  }
 
-  Board getChild(int row, int col, boolean player_one) {
-    if (this.tiling[row][col] != 'E') {
+  Board getChild(int row, int col) {
+    if (this.tiling[row][col] != '0') {
       return null;
     }
 
@@ -296,13 +321,13 @@ class Board {
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) {
         if (r == row && c == col) {
-          s += player_one ? '1' : '2';
+          s += (char) (num_moves + 1 + '0');
         } else {
           s += tiling[r][c];
         }
       }
     }
-
+    
     // get the board that's associated with this setup
     Board child = boards.get(s);
 

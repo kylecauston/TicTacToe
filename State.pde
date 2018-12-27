@@ -25,7 +25,7 @@ class HeuristicMove extends State
     {
       for(int c=0; c<3; c++)
       {
-        if (heuristics[r][c] > highest && heuristics[r][c] != -1.0)
+        if (heuristics[r][c] > highest && heuristics[r][c] != SPOT_TAKEN)
         {
           highest = heuristics[r][c];
           
@@ -52,6 +52,12 @@ class Winning extends State {
     float[][] win_chances = current_board.getChildWinChances(current_turn == first_turn);
     float[][] loss_chances = current_board.getChildLossChances(current_turn == first_turn);
 
+    for (int r=0; r<3; r++) {
+        println();
+        for (int c=0; c<3; c++) {
+          print(" " + loss_chances[r][c] + " ");
+        }
+      }
     ArrayList<int[]> loss_indices = new ArrayList<int[]>();
 
     int[] points = new int[2]; 
@@ -59,7 +65,7 @@ class Winning extends State {
 
     for (int r=0; r<3; r++) {
       for (int c=0; c<3; c++) { 
-        if (loss_chances[r][c] < lowest_chance && loss_chances[r][c] != -1.0) {
+        if (loss_chances[r][c] < lowest_chance && loss_chances[r][c] != SPOT_TAKEN) {
           lowest_chance = loss_chances[r][c];
           points = new int[2];
           points[0] = r;
@@ -98,14 +104,13 @@ class Winning extends State {
       index = win_indices.get(int(random(win_indices.size())));
     } else {
 
-      float[][] loss_chance = current_board.getChildLossChances(current_turn == first_turn);
-
+     
       println();
       println("Loss Chances");
       for (int r=0; r<3; r++) {
         println();
         for (int c=0; c<3; c++) {
-          print(" " + loss_chance[r][c] + " ");
+          print(" " + loss_chances[r][c] + " ");
         }
       }
       index = loss_indices.get(int(random(loss_indices.size())));

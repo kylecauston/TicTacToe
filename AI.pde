@@ -8,6 +8,7 @@ class AI {
   AI() {
     state = AI_LEARN;
     s = new HeuristicMove();
+    //s = new Winning();
   }
 
   public int getMove() {
