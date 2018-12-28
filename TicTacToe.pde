@@ -162,12 +162,61 @@ ArrayList<Integer> indexOfMultiple(String s, char c) {
   return indices;
 }
 
+Board rotateBoard(Board b) 
+{
+  char[][] transpose = new char[3][3];
+  
+  // find the transpose
+  for(int r=0; r<3; r++)
+  {
+    for(int c=0; c<3; c++)
+    {
+      transpose[c][r] = b.tiling[r][c];
+    }
+  }
+  
+  // reverse the columns
+  int col = 0;
+  char[][] newBoardData = new char[3][3];
+  for(int c=2; c>=0; c--)
+  {
+    for(int r=0; r<3; r++)
+    {
+      newBoardData[r][c] = transpose[r][col];
+    }
+    col++;
+  }
+
+  String s = "";
+  for(int r=0; r<3; r++)
+  {
+    for(int c=0; c<3; c++)
+    {
+      s += newBoardData[r][c];
+    }
+  }
+  
+  return boards.get(s);
+}
+
 void saveGame() {
   // reset our set of visited boards
   visited_boards.clear();
   
   // get all 4 versions of the board (rotated)
   saveGame_rec(current_board, current_board.state);
+  
+  Board r90 = rotateBoard(current_board);
+  visited_boards.clear();
+  saveGame_rec(r90, r90.state);
+  
+  Board r180 = rotateBoard(r90);
+  visited_boards.clear();
+  saveGame_rec(r180, r180.state);
+  
+  Board r270 = rotateBoard(r180);
+  visited_boards.clear();
+  saveGame_rec(r270, r270.state);
 }
 
 // recursive function for saving end state to all parent boards

@@ -47,6 +47,54 @@ class Board {
       }
     }
 
+    generateState();
+
+    boards.put(s, this);
+  }
+
+  Board(char[][] prev_board, int r, int c) {
+    this();
+
+    String s = "";
+    num_moves = 0;
+
+    for (int R=0; R<3; R++) {
+      for (int C=0; C<3; C++) {
+        if (R == r && C == c) 
+        {
+          tiling[r][c] = (char) (num_moves + 1 + '0');
+        } else { 
+          tiling[R][C] = prev_board[R][C];
+        }
+
+        if (tiling[R][C] != '0') num_moves++;
+        s += tiling[R][C];
+      }
+    }
+
+    generateState();
+    
+    boards.put(s, this);
+  }
+
+  void setStatistic(Statistic s) {
+    stats = s;
+  }
+  
+  Statistic getStatistic() {
+    return stats;
+  }
+  
+  void addVictory(boolean even) {
+    stats.addResult(even);
+  }
+  
+  void addTie() {
+    stats.addTie();
+  }
+  
+  void generateState()
+  {
     // make a tiling array of numerical values
     int[][] tile_vals = new int[3][3];
     for(int r=0; r<3; r++)
@@ -57,8 +105,7 @@ class Board {
       }
     }
 
-    // now set state
-
+    
     // first check if the row was a victory
     boolean row_victory = false;
     boolean col_victory = false;
@@ -99,86 +146,6 @@ class Board {
         break;
       }
     }
-    println("Board state: " + row_victory + ", " + col_victory + ", " + down_right_victory + ", " + down_left_victory);
-    this.printout();
-    
-    boards.put(s, this);
-  }
-
-  Board(char[][] prev_board, int r, int c) {
-    this();
-
-    String s = "";
-    num_moves = 0;
-
-    for (int R=0; R<3; R++) {
-      for (int C=0; C<3; C++) {
-        if (R == r && C == c) 
-        {
-          tiling[r][c] = (char) (num_moves + 1 + '0');
-        } else { 
-          tiling[R][C] = prev_board[R][C];
-        }
-
-        if (tiling[R][C] != '0') num_moves++;
-        s += tiling[R][C];
-      }
-    }
-
-    // set state by checking things that the new tile could have affected
-    
-    int[][] tile_vals = new int[3][3];
-    for(int R=0; R<3; R++)
-    {
-      for(int C=0; C<3; C++)
-      {
-        tile_vals[R][C] = Character.getNumericValue(tiling[R][C]);
-      }
-    }
-    // check what type of victory we look for (player 1 or 2)
-    int remainder = num_moves % 2;
-
-    // first check if the row was a victory
-    boolean row_victory = tile_vals[r][0] != 0 && tile_vals[r][0] % 2 == remainder
-      && tile_vals[r][1] != 0 && tile_vals[r][1] % 2 == remainder
-      && tile_vals[r][2] != 0 && tile_vals[r][2] % 2 == remainder;
-
-    // check if column was victory
-    boolean col_victory = tile_vals[0][c] != 0 && tile_vals[0][c] % 2 == remainder
-      && tile_vals[1][c] != 0 && tile_vals[1][c] % 2 == remainder
-      && tile_vals[2][c] != 0 && tile_vals[2][c] % 2 == remainder;
-
-    // now check if either diagonal is applicable 
-    boolean down_right_victory = r == c 
-      && tile_vals[0][0] != 0 && tile_vals[0][0] % 2 == remainder
-      && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
-      && tile_vals[2][2] != 0 && tile_vals[2][2] % 2 == remainder;
-
-    boolean down_left_victory = r+c == 2 
-      && tile_vals[0][2] != 0 && tile_vals[0][2] % 2 == remainder
-      && tile_vals[1][1] != 0 && tile_vals[1][1] % 2 == remainder
-      && tile_vals[2][0] != 0 && tile_vals[2][0] % 2 == remainder;
-
-
-    // if this is a victory state, pick the correct state
-    // if it's not victory state, check if it's a tie
-    if (row_victory || col_victory || down_right_victory || down_left_victory) {
-      state = (remainder == 1) ? BOARD_ODD_WIN : BOARD_EVEN_WIN;
-    } else if (num_moves == 9) {
-      state = BOARD_TIE;
-    }
-
-    println("Board state: " + row_victory + ", " + col_victory + ", " + down_right_victory + ", " + down_left_victory);
-
-    boards.put(s, this);
-  }
-
-  void setStatistic(Statistic s) {
-    stats = s;
-  }
-  
-  Statistic getStatistic() {
-    return stats;
   }
   
   String toFileString() {
@@ -235,6 +202,29 @@ class Board {
     float heuristic = (nonLossHeuristic + winHeuristic) / 2.0f;
     //println(nonLossHeuristic+ ", " + winHeuristic+ ", " + heuristic);
     return heuristic;
+  }
+  
+  Board getChild(int row, int col) {
+    if (this.tiling[row][col] != '0') {
+      return null;
+    }
+
+    String s = "";
+
+    for (int r=0; r<3; r++) {
+      for (int c=0; c<3; c++) {
+        if (r == row && c == col) {
+          s += (char) (num_moves + 1 + '0');
+        } else {
+          s += tiling[r][c];
+        }
+      }
+    }
+    
+    // get the board that's associated with this setup
+    Board child = boards.get(s);
+
+    return child;
   }
 
   // returns an array of win chances for spot choices
@@ -305,41 +295,6 @@ class Board {
     }
 
     return arr;
-  }
-  
-//  Statistic[] getStatistics() {
-    
-//  }
-
-  Board getChild(int row, int col) {
-    if (this.tiling[row][col] != '0') {
-      return null;
-    }
-
-    String s = "";
-
-    for (int r=0; r<3; r++) {
-      for (int c=0; c<3; c++) {
-        if (r == row && c == col) {
-          s += (char) (num_moves + 1 + '0');
-        } else {
-          s += tiling[r][c];
-        }
-      }
-    }
-    
-    // get the board that's associated with this setup
-    Board child = boards.get(s);
-
-    return child;
-  }
-  
-  void addVictory(boolean even) {
-    stats.addResult(even);
-  }
-  
-  void addTie() {
-    stats.addTie();
   }
 
   void printout() {
