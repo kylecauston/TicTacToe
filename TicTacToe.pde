@@ -10,6 +10,7 @@ AI bot;
 int first_turn;
 int current_turn;
 
+
 float last_time;
 float time_since_turn;
 
@@ -199,6 +200,39 @@ Board rotateBoard(Board b)
   return boards.get(s);
 }
 
+Board flipBoard(Board b, boolean hor)
+{
+  // reverse the columns
+  int counter = 0;
+  char[][] newBoardData = new char[3][3];
+  for(int i=2; i>=0; i--)
+  {
+    for(int j=0; j<3; j++)
+    {
+      if(hor)
+      {
+        newBoardData[i][j] = b.tiling[counter][j]; 
+      }
+      else 
+      {
+        newBoardData[j][i] = b.tiling[j][counter];
+      }
+    }
+    counter++;
+  }
+
+  String s = "";
+  for(int r=0; r<3; r++)
+  {
+    for(int c=0; c<3; c++)
+    {
+      s += newBoardData[r][c];
+    }
+  }
+  
+  return boards.get(s);
+}
+
 void saveGame() {
   // reset our set of visited boards
   visited_boards.clear();
@@ -217,6 +251,17 @@ void saveGame() {
   Board r270 = rotateBoard(r180);
   visited_boards.clear();
   saveGame_rec(r270, r270.state);
+   
+  // flip horizontally
+  Board hflip = flipBoard(current_board, true);
+  visited_boards.clear();
+  saveGame_rec(hflip, hflip.state);
+  
+  // flip vertically
+  Board vflip = flipBoard(current_board, false);
+  visited_boards.clear();
+  saveGame_rec(vflip, vflip.state);
+  
 }
 
 // recursive function for saving end state to all parent boards
